@@ -752,20 +752,35 @@ public class CurvePlatformIcon : PlatFormIcon
 
 		if (chooseObj == controlPointList[(int)PointIndex.LeftUpPoint])
 		{
-			controlPointList[(int)PointIndex.RightUpPoint].transform.position = new Vector3(controlPointList[(int)PointIndex.RightUpPoint].transform.position.x - (offset_x), tmp.y, controlPointList[(int)PointIndex.RightUpPoint].transform.position.z); 
+			controlPointList[(int)PointIndex.RightUpPoint].transform.position = new Vector3(controlPointList[(int)PointIndex.RightUpPoint].transform.position.x - (offset_x), tmp.y, controlPointList[(int)PointIndex.RightUpPoint].transform.position.z);
+
+			controlPointList[(int)PointIndex.RightMidPoint].transform.position = (controlPointList[(int)PointIndex.RightUpPoint].transform.position + controlPointList[(int)PointIndex.RightDownPoint].transform.position)/2.0f;
+
+			controlPointList[(int)PointIndex.LeftMidPoint].transform.position = (controlPointList[(int)PointIndex.LeftUpPoint].transform.position + controlPointList[(int)PointIndex.LeftDownPoint].transform.position) / 2.0f; 
 		}
 		else if (chooseObj == controlPointList[(int)PointIndex.LeftDownPoint])
 		{
-			controlPointList[(int)PointIndex.RightDownPoint].transform.position = new Vector3(controlPointList[(int)PointIndex.RightDownPoint].transform.position.x - (offset_x), tmp.y, controlPointList[(int)PointIndex.RightDownPoint].transform.position.z); 
+			controlPointList[(int)PointIndex.RightDownPoint].transform.position = new Vector3(controlPointList[(int)PointIndex.RightDownPoint].transform.position.x - (offset_x), tmp.y, controlPointList[(int)PointIndex.RightDownPoint].transform.position.z);
+
+			controlPointList[(int)PointIndex.RightMidPoint].transform.position = (controlPointList[(int)PointIndex.RightUpPoint].transform.position + controlPointList[(int)PointIndex.RightDownPoint].transform.position) / 2.0f;
+
+			controlPointList[(int)PointIndex.LeftMidPoint].transform.position = (controlPointList[(int)PointIndex.LeftUpPoint].transform.position + controlPointList[(int)PointIndex.LeftDownPoint].transform.position) / 2.0f; 
 		}
 		else if (chooseObj == controlPointList[(int)PointIndex.RightUpPoint])
 		{
+			controlPointList[(int)PointIndex.LeftUpPoint].transform.position = new Vector3(controlPointList[(int)PointIndex.LeftUpPoint].transform.position.x - (offset_x), tmp.y, controlPointList[(int)PointIndex.LeftUpPoint].transform.position.z);
 
-			controlPointList[(int)PointIndex.LeftUpPoint].transform.position = new Vector3(controlPointList[(int)PointIndex.LeftUpPoint].transform.position.x - (offset_x), tmp.y, controlPointList[(int)PointIndex.LeftUpPoint].transform.position.z); 
+			controlPointList[(int)PointIndex.RightMidPoint].transform.position = (controlPointList[(int)PointIndex.RightUpPoint].transform.position + controlPointList[(int)PointIndex.RightDownPoint].transform.position) / 2.0f;
+
+			controlPointList[(int)PointIndex.LeftMidPoint].transform.position = (controlPointList[(int)PointIndex.LeftUpPoint].transform.position + controlPointList[(int)PointIndex.LeftDownPoint].transform.position) / 2.0f; 
 		}
 		else if (chooseObj == controlPointList[(int)PointIndex.RightDownPoint])
 		{
-			controlPointList[(int)PointIndex.LeftDownPoint].transform.position = new Vector3(controlPointList[(int)PointIndex.LeftDownPoint].transform.position.x - (offset_x), tmp.y, controlPointList[(int)PointIndex.LeftDownPoint].transform.position.z); 
+			controlPointList[(int)PointIndex.LeftDownPoint].transform.position = new Vector3(controlPointList[(int)PointIndex.LeftDownPoint].transform.position.x - (offset_x), tmp.y, controlPointList[(int)PointIndex.LeftDownPoint].transform.position.z);
+
+			controlPointList[(int)PointIndex.RightMidPoint].transform.position = (controlPointList[(int)PointIndex.RightUpPoint].transform.position + controlPointList[(int)PointIndex.RightDownPoint].transform.position) / 2.0f;
+
+			controlPointList[(int)PointIndex.LeftMidPoint].transform.position = (controlPointList[(int)PointIndex.LeftUpPoint].transform.position + controlPointList[(int)PointIndex.LeftDownPoint].transform.position) / 2.0f; 
 		}
 		else if (chooseObj == controlPointList[(int)PointIndex.RightMidPoint])
 		{
@@ -1010,6 +1025,7 @@ public class platform2icon : MonoBehaviour
 	public bool isPlatformBalustrade;
 	public bool isPlatformStair;
 
+	public float platHeightChange;
 	void Awake()
 	{
 		dragitemcontroller = GameObject.Find("DragItemController").GetComponent<DragItemController>();
@@ -1068,23 +1084,27 @@ public class platform2icon : MonoBehaviour
 	}
 	public void adjPos()
 	{
+		platHeightChange=0;
+		Vector3 offset;
 		Vector3 tmp = dragitemcontroller.chooseObj.transform.position;
 		GameObject chooseObj = dragitemcontroller.chooseObj;
 		switch (gameObject.tag)
 		{
 			case "CurvePlatformIcon"://specialCase
-					curvePlatformIcon.AdjPos(tmp, chooseObj);
-					curvePlatformIcon.AdjMesh();
+				offset=curvePlatformIcon.AdjPos(tmp, chooseObj);
+				curvePlatformIcon.AdjMesh();
+				
 				if (chooseObj == curvePlatformIcon.rightUpPoint || chooseObj == curvePlatformIcon.leftUpPoint)
 				{
-	
 					platTopWidthDis = curvePlatformIcon.platformTopWidth / 2.0f;
 					platHeightDis = curvePlatformIcon.platformHeight;
+					platHeightChange=offset.y;
 				}
 				else if (chooseObj == curvePlatformIcon.rightDownPoint || chooseObj == curvePlatformIcon.leftDownPoint)
 				{
 					platButtomWidthDis = curvePlatformIcon.platformButtonWidth / 2.0f;
 					platHeightDis = curvePlatformIcon.platformHeight;
+					platHeightChange = -offset.y;
 				}
 				else if (chooseObj == curvePlatformIcon.rightMidPoint || chooseObj == curvePlatformIcon.leftMidPoint)
 				{
@@ -1103,21 +1123,23 @@ public class platform2icon : MonoBehaviour
 				}
 				break;
 			case "BasedPlatformIcon"://specialCase
+				offset=basedPlatformIcon.AdjPos(tmp, chooseObj);
+				basedPlatformIcon.AdjMesh();
+				
 				if (chooseObj == basedPlatformIcon.rightUpPoint || chooseObj == basedPlatformIcon.leftUpPoint)
 				{
-					basedPlatformIcon.AdjPos(tmp, chooseObj);
-					basedPlatformIcon.AdjMesh();
-
 					platTopWidthDis = basedPlatformIcon.platformTopWidth / 2.0f;
 					platHeightDis = basedPlatformIcon.platformHeight;
+					
+					platHeightChange = offset.y;
 				}
 				else if (chooseObj == basedPlatformIcon.rightDownPoint || chooseObj == basedPlatformIcon.leftDownPoint)
 				{
-					basedPlatformIcon.AdjPos(tmp, chooseObj);
-					basedPlatformIcon.AdjMesh();
-
+	
 					platButtomWidthDis = basedPlatformIcon.platformButtonWidth / 2.0f;
 					platHeightDis = basedPlatformIcon.platformHeight;
+
+					platHeightChange = -offset.y;
 				}
 				if (isPlatformBalustrade)
 				{
@@ -1131,7 +1153,7 @@ public class platform2icon : MonoBehaviour
 				}
 				break;
 		}
-		transform.CenterOnChildred();
+		//transform.CenterOnChildred();
 	}
 	public void DestroyFunction(string objName)
 	{

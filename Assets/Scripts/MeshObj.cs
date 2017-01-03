@@ -6,16 +6,27 @@ public static class GO_Extensions
 	public static void CenterOnChildred(this Transform aParent)
 	{
 		var childs = aParent.GetComponentsInChildren<Transform>(true) as Transform[];
+		List<Transform> childList=new List<Transform>();
 		var pos = Vector3.zero;
-		foreach (var C in childs)
+		for(int i=0;i<childs.Length;i++)
+		{
+			if(childs[i].tag!="Empty")
+			{
+				childList.Add(childs[i]);
+			}
+		}
+		foreach (var C in childList)
 		{
 			pos += C.position;
 			C.parent = null;
 		}
 		pos /= childs.Length;
 		aParent.position = pos;
-		foreach (var C in childs)
+		foreach (var C in childList) 
+		{
 			C.parent = aParent;
+		}
+		Debug.Log("childs.Length" + childs.Length);
 		Debug.Log("aParent.position" + aParent.position);
 	}
 }
@@ -760,6 +771,38 @@ public class HexagonIcon : IconObject//六邊形
 	}
 
 }
+public class OctagonIcon : IconObject//八邊形
+{
+	public int edgeIndex = 8;
+	public void OctagonIconCreate<T>(T thisGameObject, string objName, List<GameObject> controlPointList) where T : Component
+	{
+		Debug.Log("zzz");
+		InitBodySetting(objName, (int)BodyType.GeneralBody);
+		InitIconMenuButtonSetting();
+		Debug.Log("gfdfdfgfg:controlPointList+:" + controlPointList.Count);
+		this.controlPointList = controlPointList;
+		Debug.Log("gfrgfg:controlPointList+:" + controlPointList.Count);
+		InitControlPointList2lastControlPointPosition();
+
+		bodyStruct.mFilter.mesh.vertices = new Vector3[] {
+					controlPointList [0].transform.position,
+					controlPointList [1].transform.position,
+					controlPointList [2].transform.position,
+					controlPointList [3].transform.position,
+					controlPointList [4].transform.position,
+					controlPointList [5].transform.position,
+					controlPointList [6].transform.position,
+					controlPointList [7].transform.position
+		};
+		bodyStruct.mFilter.mesh.triangles = new int[] { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7 };
+		bodyStruct.mFilter.mesh.RecalculateNormals();
+
+		SetParent2BodyAndControlPointList(thisGameObject);
+		InitLineRender(thisGameObject);
+		SetIconObjectColor();
+	}
+
+}
 public class MeshObj : MonoBehaviour
 {
 	public List<GameObject> controlPointList = new List<GameObject>();
@@ -770,6 +813,7 @@ public class MeshObj : MonoBehaviour
 	private RectangleIcon rectangleIcon;
 	private PentagonIcon pentagonIcon;
 	private HexagonIcon hexagonIcon;
+	private OctagonIcon octagonIcon;
 
 	private DragItemController dragitemcontroller;
 	private Movement movement;
@@ -789,7 +833,23 @@ public class MeshObj : MonoBehaviour
 	{
 		dragitemcontroller = GameObject.Find("DragItemController").GetComponent<DragItemController>();
 	}
+	List<GameObject> ControlPointCreate(int edgeCount, List<GameObject> controlPointList) 
+	{ 
+		Vector2 center=transform.position;
+		float r = 0.1f; //中心點與頂點距離
+		float piDouble = Mathf.PI * 2;
+		int count=0;
+		for (float i = 0; i < piDouble; i += (piDouble / edgeCount))
+		{
+			float ansX = (r * Mathf.Cos(-i) + center.x); //求X座標
+			float ansY = (r * Mathf.Sin(-i) + center.y); //求Y座標
+			controlPointList[count].transform.position = new Vector3(ansX, ansY, controlPointList[count].transform.position.z);
+			count++;
+			if(count>=edgeCount)break;
+		}
 
+		return controlPointList;
+	}
 	VerandaIcon CreateVerandaIcon()
 	{
 		VerandaIcon verandaIcon = new VerandaIcon();
@@ -851,13 +911,22 @@ public class MeshObj : MonoBehaviour
 	HexagonIcon CreateHexagonIcon()
 	{
 		HexagonIcon hexIcon = new HexagonIcon();
-
+		controlPointList = ControlPointCreate(6, controlPointList);
 		hexIcon.HexagonIconCreate(this, "HexagonIcon", controlPointList);
 
 		edgeIndex = hexIcon.edgeIndex;
 		return hexIcon;
 	}
+	OctagonIcon CreateOctagonIcon()
+	{
+		OctagonIcon octIcon = new OctagonIcon();
+		controlPointList = ControlPointCreate(8, controlPointList);
+		octIcon.OctagonIconCreate(this, "OctagonIcon", controlPointList);
 
+		edgeIndex = octIcon.edgeIndex;
+		return octIcon;
+	}
+	
 	void Awake()
 	{
 		movement = GameObject.Find("Movement").GetComponent<Movement>();
@@ -881,6 +950,9 @@ public class MeshObj : MonoBehaviour
 				break;
 			case "HexagonIcon":
 				hexagonIcon = CreateHexagonIcon();
+				break;
+			case "OctagonIcon":
+				octagonIcon = CreateOctagonIcon();
 				break;
 
 		}
@@ -926,13 +998,17 @@ public class MeshObj : MonoBehaviour
 						hexagonIcon.AdjPos(tmp, i, center);
 						hexagonIcon.AdjMesh();
 						break;
-
+					case "OctagonIcon":
+						octagonIcon.AdjPos(tmp, i, center);
+						octagonIcon.AdjMesh();
+						break;
+						
 				}
 				break;
 
 			}
 		}
-		transform.CenterOnChildred();
+		//transform.CenterOnChildred();
 	}
 	public void addpoint()
 	{
@@ -990,19 +1066,18 @@ public class MeshObj : MonoBehaviour
 					}
 				}
 				break;
+
 			case "TriangleIcon":
 				return triangleIcon.ClampPos(inputPos, center);
-				break;
 			case "RectangleIcon":
 				return rectangleIcon.ClampPos(inputPos, center);
-				break;
 			case "PentagonIcon":
-				pentagonIcon.ClampPos(inputPos, center);
-				break;
+				return pentagonIcon.ClampPos(inputPos, center);
 			case "HexagonIcon":
-				hexagonIcon.ClampPos(inputPos, center);
-				break;
-
+				return hexagonIcon.ClampPos(inputPos, center);
+			case "OctagonIcon":
+				return octagonIcon.ClampPos(inputPos, center);
+			break;
 		}
 		return inputPos;
 	}

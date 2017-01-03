@@ -423,7 +423,7 @@ public class Testing : MonoBehaviour
 		ControlPoint_4_position = tailControlPointList[0].transform.position;
 		ControlPoint_5_position = tailControlPointList[1].transform.position;
 
-		transform.CenterOnChildred();
+		//transform.CenterOnChildred();
 	}
 
 	public void addpoint()
