@@ -347,7 +347,7 @@ public class BasedPlatformBalustradeIcon<M> : DecorateIconObject where M : class
 	}
 	public void SetIconObjectColor()
 	{
-		base.SetIconObjectColor();
+		//base.SetIconObjectColor();
 		rightColumn.bodyStruct.body.GetComponent<MeshRenderer>().material.color = Color.red;
 		leftColumn.bodyStruct.body.GetComponent<MeshRenderer>().material.color = Color.red;
 	}

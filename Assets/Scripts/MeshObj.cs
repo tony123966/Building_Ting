@@ -124,7 +124,7 @@ public class IconObject : lineRendererControl
 	public List<GameObject> controlPointList = new List<GameObject>();
 	public Vector3[] lastControlPointPosition = null;
 	public List<Vector3> controlPointList_Vec3_2_LineRender = new List<Vector3>();//用於lineRenderer的controlPoint
-	public BodyStruct bodyStruct=new BodyStruct();
+	public BodyStruct bodyStruct=null;
 	public Material silhouetteShader = null;
 
 	public IconControl iconMenuControl;
@@ -154,7 +154,7 @@ public class IconObject : lineRendererControl
 				newBodyStruct.mCollider = newBodyStruct.body.AddComponent<MeshCollider>() as MeshCollider;
 				newBodyStruct.mFilter.mesh = new Mesh();
 				newBodyStruct.mCollider.GetComponent<MeshCollider>().sharedMesh = newBodyStruct.mFilter.mesh;
-				newBodyStruct.mRenderer.sortingOrder = ++bodyStruct.mRenderer.sortingOrder+1;
+				newBodyStruct.mRenderer.sortingOrder =(bodyStruct!=null)?++bodyStruct.mRenderer.sortingOrder+1:0;
 				Debug.Log("newBodyStruct.mRenderer.sortingOrder " + newBodyStruct.mRenderer.sortingOrder);
 				newBodyStruct.body.tag = "MeshBodyCollider";
 				break;
@@ -172,6 +172,7 @@ public class IconObject : lineRendererControl
 	}
 	public void InitBodySetting(string objName, int bodyType)
 	{
+		bodyStruct = new BodyStruct();
 		switch (bodyType)
 		{
 			case (int)BodyType.GeneralBody:

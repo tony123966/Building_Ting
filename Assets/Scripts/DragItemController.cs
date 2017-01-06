@@ -884,10 +884,14 @@ public class MisstionTab
 	public int inUseIndex;
 	Bounds windowsBounds;
 	Bounds tabsBounds;
+	GameObject chooseWindow;
 	float offset;
-	public void CreateMissionTabs<T>(T thisGameObject, GameObject missionTabObj, GameObject chooseWindow) where T : Component
+	public void CreateMissionTabs<T>(T thisGameObject, GameObject chooseWindow, GameObject missionTabObj) where T : Component
 	{
+		this.chooseWindow=chooseWindow;
+		if (missionTabObj == null) return;
 		windowsBounds = NGUIMath.CalculateAbsoluteWidgetBounds(chooseWindow.transform);
+		missionTabObj.transform.localScale = new Vector3(windowsBounds.size.x / 100.0f, windowsBounds.size.x/100.0f,0);
 		tabsBounds = NGUIMath.CalculateAbsoluteWidgetBounds(missionTabObj.transform);
 		offset = tabsBounds.size.x * 0.01f;
 		GameObject clone;
@@ -988,6 +992,7 @@ public class MisstionTab
 	}
 	public void SortMisstionTabPosition()
 	{
+		windowsBounds = NGUIMath.CalculateAbsoluteWidgetBounds(chooseWindow.transform);
 		for (int i = 0; i < missionTabsList.Count; i++)
 		{
 			missionTabsList[i].transform.position = windowsBounds.min + new Vector3((i * (tabsBounds.size.x + offset)) + tabsBounds.extents.x, tabsBounds.extents.y, 0.0f);
@@ -2292,7 +2297,7 @@ public class DragItemController : MonoBehaviour
 
 						AllWindowsStruct[index].temporateAllFloorItem[AllWindowsStruct[index].lastChooseMainDragObjectName].Add(newAllComponent);
 
-						AllWindowsStruct[index].misstionTab.CreateMissionTabs(this, misstionTabObj, chooseWindow);
+						AllWindowsStruct[index].misstionTab.CreateMissionTabs(this, chooseWindow,misstionTabObj);
 
 						CreateMainComponent(index);
 
@@ -2320,7 +2325,7 @@ public class DragItemController : MonoBehaviour
 
 						AllWindowsStruct[index].temporateAllFloorItem[AllWindowsStruct[index].lastChooseMainDragObjectName].Add(newAllComponent);
 
-						AllWindowsStruct[index].misstionTab.CreateMissionTabs(this, misstionTabObj, chooseWindow);
+						AllWindowsStruct[index].misstionTab.CreateMissionTabs(this, chooseWindow, misstionTabObj);
 
 						CreateMainComponent(index);
 
