@@ -1296,7 +1296,7 @@ public class DragItemController : MonoBehaviour
 	void Update()
 	{
 		RayCastToChooseObj();
-		iconMenuController.Update();
+		if (iconMenuController!=null) iconMenuController.Update();
 	}
 	void InitWindowListMemorySetting()
 	{

@@ -280,7 +280,7 @@ public class BasedPlatformBalustradeIcon<M> : DecorateIconObject where M : class
 	public Column leftColumn;
 	public Column rightColumn;
 
-	public int mutiColumnIconCount = 3;
+	public int mutiColumnIconCount = 1;
 	public int mutiColumnIconMaxCount = 13;
 	public float columnHeight;
 	public float columnWidth;
@@ -295,9 +295,6 @@ public class BasedPlatformBalustradeIcon<M> : DecorateIconObject where M : class
 	{
 		
 		MainComponent = platformIcon as PlatFormIcon;
-
-		InitBodySetting(thisGameObject);
-		InitIconMenuButtonSetting();
 
 		Vector3 h = new Vector3(0.0f, columnHeight, 0.0f);
 		Vector3 offsetVector = new Vector3(0.0f, offset, 0.0f);
@@ -338,12 +335,16 @@ public class BasedPlatformBalustradeIcon<M> : DecorateIconObject where M : class
 		SetParent2BodyAndControlPointList(thisGameObject);
 
 		InitDecorateIconObjectSetting(correspondingDragItemObject);
+/*
 
 		for (int i = 0; i < body.Count; i++)
 		{
 			if (body[i].GetComponent<IconControl>())
 				UnityEngine.Object.Destroy(body[i].GetComponent<IconControl>());
-		}
+		}*/
+
+		InitBodySetting(thisGameObject);
+		InitIconMenuButtonSetting();
 	}
 	public void SetIconObjectColor()
 	{
@@ -477,7 +478,8 @@ where T : Component
 	}
 	public void InitBodySetting<T>(T thisGameObject) where T : Component
 	{
-		iconMenuControl = thisGameObject.gameObject.AddComponent<IconControl>();
+		//iconMenuControl = thisGameObject.gameObject.AddComponent<IconControl>();
+		iconMenuControl = rightColumn.iconMenuControl;
 	}
 	public void InitIconMenuButtonSetting()
 	{
@@ -486,10 +488,20 @@ where T : Component
 		iconMenuControl.scrollBarButton.scrollBarIconValue = mutiColumnIconCount;
 		iconMenuControl.scrollBarButton.scrollBarIconMaxValue = mutiColumnIconMaxCount;
 		iconMenuControl.scrollBarButton.scrollBarIconType = (int)ScrollBarButton.ScrollType.OddINT;
+
+		leftColumn.bodyStruct.body.GetComponent<IconControl>().scrollBarButton = iconMenuControl.scrollBarButton;
+		leftColumn.bodyStruct.body.GetComponent<IconControl>().delelteButton = iconMenuControl.delelteButton;
 	}
 	public override void InitIconMenuButtonUpdate()
 	{
 		mutiColumnIconCount = iconMenuControl.scrollBarButton.scrollBarIconValue;
+
+
+		rightColumn.bodyStruct.body.GetComponent<IconControl>().scrollBarButton = iconMenuControl.scrollBarButton;
+		rightColumn.bodyStruct.body.GetComponent<IconControl>().delelteButton = iconMenuControl.delelteButton;
+
+		leftColumn.bodyStruct.body.GetComponent<IconControl>().scrollBarButton = iconMenuControl.scrollBarButton;
+		leftColumn.bodyStruct.body.GetComponent<IconControl>().delelteButton = iconMenuControl.delelteButton;
 	}
 }
 public class CurvePlatformStruct

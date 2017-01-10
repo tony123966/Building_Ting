@@ -120,6 +120,7 @@ public class BodyStruct
 public class IconObject : lineRendererControl
 {
 	public enum PointIndex { LeftUpPoint = 0, RightUpPoint = 1, RightDownPoint = 2, LeftDownPoint = 3, };
+	public enum ObjectType { CanMove = 0, CanClick = 1, Normal = 2};
 	public enum BodyType { GeneralBody = 0, CylinderBody = 1, }
 	public List<GameObject> controlPointList = new List<GameObject>();
 	public Vector3[] lastControlPointPosition = null;
@@ -127,7 +128,7 @@ public class IconObject : lineRendererControl
 	public BodyStruct bodyStruct=null;
 	public Material silhouetteShader = null;
 
-	public IconControl iconMenuControl;
+	public IconControl iconMenuControl=null;
 	public float centerX;
 	public float centerY;
 	public float closerDis = 0.01f;
@@ -136,6 +137,22 @@ public class IconObject : lineRendererControl
 		if (Shader.Find("Outlined/Silhouetted Bumped Diffuse"))
 			silhouetteShader = new Material(Shader.Find("Outlined/Silhouetted Bumped Diffuse"));
 
+	}
+	public void SetObjectCanMove(GameObject obj, ObjectType objectType)
+	{
+		switch (objectType)
+		{
+			case ObjectType.CanMove:
+				obj.tag = "ControlPoint";
+			break;
+			case ObjectType.CanClick:
+				obj.tag = "MeshBodyCollider";
+			 break;
+			case ObjectType.Normal:
+			default:
+				 obj.tag = "Untagged";
+			 break;
+		}
 	}
 	public virtual void InitIconMenuButtonUpdate() { }
 	public void InitIconMenuButtonSetting()
@@ -288,7 +305,7 @@ public class IconObject : lineRendererControl
 	public GameObject CreateControlPoint(string objName, Vector3 localScale, Vector3 pos)
 	{
 		GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		obj.tag = "ControlPoint";
+		SetObjectCanMove(obj,ObjectType.CanMove);
 		obj.name = objName;
 		obj.transform.localScale = localScale;
 		obj.transform.position = pos;
