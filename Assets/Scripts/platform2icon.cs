@@ -1165,7 +1165,7 @@ public class platform2icon : MonoBehaviour
 				}
 				break;
 		}
-		//transform.CenterOnChildred();
+/*		transform.GetMaxBounds();*/
 	}
 	public void DestroyFunction(string objName)
 	{

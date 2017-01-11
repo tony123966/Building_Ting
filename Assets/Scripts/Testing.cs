@@ -8,19 +8,151 @@ public class RoofStruct
 	public catline catLine2Body;
 	public catline catLine2Tail;
 }
+public class RoofTriShandingIcon : DecorateIconObject
+{
+	public enum PointIndex {TopPoint = 0, LeftPoint = 1, RightPoint =2};
+	public GameObject leftPoint;
+	public GameObject rightPoint;
+	public GameObject topPoint;
+	public float initDownLength;
+	public float downLength;
+	BasedRoofIcon MainComponent;
+	float scale=3.0f;
+	public void RoofTriShandingIconCreate<T>(T thisGameObject, string objName, BasedRoofIcon basedRoofIcon, GameObject correspondingDragItemObject) where T : Component
+	{
+		InitBodySetting(objName, (int)BodyType.GeneralBody);
+		InitIconMenuButtonSetting();
+
+		initDownLength = downLength = basedRoofIcon.topWidth;
+		MainComponent = basedRoofIcon;
+
+		 leftPoint = new GameObject();
+		 topPoint = CreateControlPoint("topPoint", MainComponent.controlPointList[0].transform.localScale, new Vector3(0, 0, 0));
+		 rightPoint = new GameObject();
+
+		Vector3 leftPointPos = basedRoofIcon.leftRoofLine.bodyControlPointList[0].transform.position ;
+		Vector3 rightPointPos = basedRoofIcon.rightRoofLine.bodyControlPointList[0].transform.position;
+		Vector3 topPointPos = new Vector3((rightPointPos.x + leftPointPos.x) / 2.0f, (Mathf.Sqrt(3) / 2 * (rightPointPos.x - leftPointPos.x)) / scale + rightPointPos.y, rightPointPos.z);
+
+		leftPoint.transform.position = leftPointPos;
+		leftPoint.transform.parent = thisGameObject.transform;
+		topPoint.transform.position = topPointPos;
+		rightPoint.transform.position = rightPointPos;
+		rightPoint.transform.parent = thisGameObject.transform;
+
+		controlPointList.Add(topPoint);
+		InitControlPointList2lastControlPointPosition();
+
+		bodyStruct.mFilter.mesh.vertices = new Vector3[] {
+				basedRoofIcon.leftRoofLine.bodyControlPointList[0].transform.position,
+				controlPointList [0].transform.position,
+				basedRoofIcon.rightRoofLine.bodyControlPointList[0].transform.position,
+			};
+		bodyStruct.mFilter.mesh.triangles = new int[] { 0, 1, 2 };
+		bodyStruct.mFilter.mesh.RecalculateNormals();
+
+		InitLineRender(thisGameObject);
+
+		SetIconObjectColor();
+		SetParent2BodyAndControlPointList(thisGameObject);
+
+		InitDecorateIconObjectSetting(correspondingDragItemObject);
+	}
+	public override void InitLineRender<T>(T thisGameObject)
+	{
+		controlPointList_Vec3_2_LineRender.Add(topPoint.transform.position);
+		controlPointList_Vec3_2_LineRender.Add(leftPoint.transform.position);
+		controlPointList_Vec3_2_LineRender.Add(rightPoint.transform.position);
+
+		for (int i = 0; i < controlPointList_Vec3_2_LineRender.Count; i++)
+		{
+			if (i != controlPointList_Vec3_2_LineRender.Count - 1)
+				CreateLineRenderer(thisGameObject, controlPointList_Vec3_2_LineRender[i], controlPointList_Vec3_2_LineRender[i + 1]);
+			else
+				CreateLineRenderer(thisGameObject, controlPointList_Vec3_2_LineRender[i], controlPointList_Vec3_2_LineRender[0]);
+		}
+	}
+	public override void UpdateLineRender()
+	{
+		controlPointList_Vec3_2_LineRender[(int)PointIndex.TopPoint] = (topPoint.transform.position);
+		controlPointList_Vec3_2_LineRender[(int)PointIndex.LeftPoint] = (leftPoint.transform.position);
+		controlPointList_Vec3_2_LineRender[(int)PointIndex.RightPoint] = (rightPoint.transform.position);
+		for (int i = 0; i < lineRenderList.Count; i++)
+		{
+			if (i != controlPointList_Vec3_2_LineRender.Count - 1)
+				AdjLineRenderer(i, controlPointList_Vec3_2_LineRender[i], controlPointList_Vec3_2_LineRender[i + 1]);
+			else
+				AdjLineRenderer(i, controlPointList_Vec3_2_LineRender[i], controlPointList_Vec3_2_LineRender[0]);
+		}
+	}
+	public Vector3 AdjPos(Vector3 tmp, GameObject chooseObject)
+	{
+		float OffsetX = 0;
+		float OffsetY = 0;
+
+		if (chooseObject == topPoint)
+		{
+			OffsetY = tmp.y - lastControlPointPosition[(int)PointIndex.TopPoint].y;
+		}
+		UpdateLastPos();
+		return new Vector3(OffsetX, OffsetY, 0);
+	}
+	public void AdjMesh()
+	{
+
+		Vector3 leftPointPos = MainComponent.leftRoofLine.bodyControlPointList[0].transform.position;
+		Vector3 rightPointPos = MainComponent.rightRoofLine.bodyControlPointList[0].transform.position;
+		leftPoint.transform.position = leftPointPos;
+		rightPoint.transform.position = rightPointPos;
+
+		downLength = MainComponent.topWidth;
+
+		bodyStruct.mFilter.mesh.Clear();
+		bodyStruct.mFilter.mesh.vertices = new Vector3[] {
+				MainComponent.leftRoofLine.bodyControlPointList[0].transform.position,
+				controlPointList [0].transform.position,
+				MainComponent.rightRoofLine.bodyControlPointList[0].transform.position,
+			};
+		bodyStruct.mFilter.mesh.triangles = new int[] { 0, 1, 2 };
+		bodyStruct.mFilter.mesh.RecalculateNormals();
+		UpdateLineRender();
+		UpdateCollider();
+	}
+	public Vector3 ClampPos(Vector3 inputPos, GameObject chooseObj)
+	{
+		float minClampX = float.MinValue;
+		float maxClampX = float.MaxValue;
+		float minClampY = float.MinValue;
+		float maxClampY = float.MaxValue;
+		float minHeight = closerDis;
+		if (chooseObj == topPoint)
+		{
+			minClampY = MainComponent.rightRoofLine.bodyControlPointList[0].transform.position.y + minHeight;
+		}
+		float posX = Mathf.Clamp(inputPos.x, minClampX, maxClampX);
+		float posY = Mathf.Clamp(inputPos.y, minClampY, maxClampY);
+		return new Vector3(posX, posY, inputPos.z);
+	}
+}
+
 public class BasedRoofIcon : IconObject
 {
 	public RoofStruct rightRoofLine = new RoofStruct();
 	public RoofStruct leftRoofLine = new RoofStruct();
 	Vector3 orginPos;
-	float initWidth;
-	float initHeight;
+	public float initCenterWidth;
+	public float initTopWidth;
+	public float initHeight;
+	public float topWidth;
 	public int numberOfPoints2Body = 10;
 	public int numberOfPoints2Tail = 20;
 	public int sliceUnit2Body = 1;
 	public int sliceUnit2Tail = 1;
 	int linerRenderCount2Body = 0;
 	int linerRenderCount2Tail = 0;
+
+	public RoofTriShandingIcon roofTriShandingIcon = null;
+
 	public void CreateBasedRoofIcon<T>(T thisGameObject, string objName, List<GameObject> bodyControlPointList, List<GameObject> tailControlPointList, Vector3 centerPos) where T : Component
 	{
 		InitBodySetting(objName, (int)BodyType.GeneralBody);
@@ -28,9 +160,10 @@ public class BasedRoofIcon : IconObject
 
 		this.orginPos = centerPos;
 		centerX = centerPos.x;
-		centerY=(bodyControlPointList[0].transform.position.y+bodyControlPointList[bodyControlPointList.Count-1].transform.position.y)/2.0f;
-		initWidth = bodyControlPointList[(int)bodyControlPointList.Count / 2].transform.position.x - centerX;
-		initHeight=(bodyControlPointList[0].transform.position.y - bodyControlPointList[bodyControlPointList.Count - 1].transform.position.y);
+		centerY = (bodyControlPointList[0].transform.position.y + bodyControlPointList[bodyControlPointList.Count - 1].transform.position.y) / 2.0f;
+		initCenterWidth = bodyControlPointList[(int)bodyControlPointList.Count / 2].transform.position.x - centerX;
+		initHeight = (bodyControlPointList[0].transform.position.y - bodyControlPointList[bodyControlPointList.Count - 1].transform.position.y);
+
 		rightRoofLine.bodyControlPointList = bodyControlPointList;
 		rightRoofLine.tailControlPointList = tailControlPointList;
 
@@ -69,6 +202,7 @@ public class BasedRoofIcon : IconObject
 		{
 			GameObject copy = new GameObject();
 			copy.transform.parent = thisGameObject.transform;
+			copy.tag="ControlPoint";
 			copy.transform.position = new Vector3(bodyControlPointList[i].transform.position.x - 2 * (bodyControlPointList[i].transform.position.x - centerPos.x), bodyControlPointList[i].transform.position.y, bodyControlPointList[i].transform.position.z);
 			leftRoofLine.bodyControlPointList.Add(copy);
 			leftRoofLine.catLine2Body.AddControlPoint(copy);
@@ -78,11 +212,14 @@ public class BasedRoofIcon : IconObject
 		{
 			GameObject copy = new GameObject();
 			copy.transform.parent = thisGameObject.transform;
+			copy.tag = "ControlPoint";
 			copy.transform.position = new Vector3(tailControlPointList[i].transform.position.x - 2 * (tailControlPointList[i].transform.position.x - centerPos.x), tailControlPointList[i].transform.position.y, tailControlPointList[i].transform.position.z);
 			leftRoofLine.tailControlPointList.Add(copy);
 			leftRoofLine.catLine2Tail.AddControlPoint(copy);
 		}
 		InitControlPointList2lastControlPointPosition();
+
+		initTopWidth = topWidth = rightRoofLine.bodyControlPointList[0].transform.position.x-leftRoofLine.bodyControlPointList[0].transform.position.x;
 
 		rightRoofLine.catLine2Body.SetLineNumberOfPoints(numberOfPoints2Body);
 		rightRoofLine.catLine2Body.ResetCatmullRom();
@@ -100,6 +237,11 @@ public class BasedRoofIcon : IconObject
 
 
 		AdjMesh();
+	}
+	public void CreateRoofTriShanding<T>(T thisGameObject, string objName, GameObject correspondingDragItemObject) where T : Component
+	{
+		roofTriShandingIcon = new RoofTriShandingIcon();
+		roofTriShandingIcon.RoofTriShandingIconCreate(thisGameObject, objName, this, correspondingDragItemObject);
 	}
 	public void AdjPos(Vector3 tmp, GameObject chooseObj)
 	{
@@ -124,6 +266,16 @@ public class BasedRoofIcon : IconObject
 		rightRoofLine.catLine2Tail.ResetCatmullRom();
 		leftRoofLine.catLine2Tail.ResetCatmullRom();
 		UpdateLastPos();
+		if (chooseObj == rightRoofLine.bodyControlPointList[0])
+		{
+			if (roofTriShandingIcon != null)
+			{
+				roofTriShandingIcon.AdjMesh();
+				roofTriShandingIcon.UpdateLastPos();
+			}
+			topWidth = rightRoofLine.bodyControlPointList[0].transform.position.x-leftRoofLine.bodyControlPointList[0].transform.position.x;
+		}
+
 	}
 	public void AdjMesh()
 	{
@@ -316,15 +468,15 @@ public class BasedRoofIcon : IconObject
 		float maxClampX = float.MaxValue;
 		float minClampY = float.MinValue;
 		float maxClampY = float.MaxValue;
-		float minWidth = initWidth * 0.5f;
+		float minWidth = initCenterWidth * 0.5f;
 		float minHeight = initHeight * 0.3f;
-		if(chooseObj == rightRoofLine.bodyControlPointList[0])
+		if (chooseObj == rightRoofLine.bodyControlPointList[0])
 		{
 			minClampX = centerX;
 			minClampY = rightRoofLine.bodyControlPointList[2].transform.position.y + minHeight;
 			if (rightRoofLine.bodyControlPointList[0].transform.position.y < rightRoofLine.bodyControlPointList[1].transform.position.y)
 				maxClampX = rightRoofLine.bodyControlPointList[1].transform.position.x - closerDis;
-	
+
 		}
 		else if (chooseObj == rightRoofLine.bodyControlPointList[1])
 		{
@@ -335,15 +487,15 @@ public class BasedRoofIcon : IconObject
 				minClampY = rightRoofLine.bodyControlPointList[2].transform.position.y + closerDis;
 				minClampX = centerX + minWidth;
 			}
-			if (rightRoofLine.bodyControlPointList[1].transform.position.y >rightRoofLine.bodyControlPointList[0].transform.position.y)
+			if (rightRoofLine.bodyControlPointList[1].transform.position.y > rightRoofLine.bodyControlPointList[0].transform.position.y)
 				minClampX = rightRoofLine.bodyControlPointList[0].transform.position.x + minWidth;
-	
+
 			minClampY = rightRoofLine.bodyControlPointList[2].transform.position.y + closerDis;
 		}
 		else if (chooseObj == rightRoofLine.bodyControlPointList[2])
 		{
 			minClampX = centerX;
-			maxClampY = Mathf.Min(rightRoofLine.bodyControlPointList[0].transform.position.y,rightRoofLine.bodyControlPointList[1].transform.position.y)- closerDis;
+			maxClampY = Mathf.Min(rightRoofLine.bodyControlPointList[0].transform.position.y, rightRoofLine.bodyControlPointList[1].transform.position.y) - closerDis;
 		}
 
 		float posX = Mathf.Clamp(inputPos.x, minClampX, maxClampX);
@@ -382,6 +534,9 @@ public class Testing : MonoBehaviour
 
 	public float RooficonHeight;
 	public float RooficonWide;
+
+	public bool isRoofTriShanding;
+
 	void Start()
 	{
 		dragitemcontroller = GameObject.Find("DragItemController").GetComponent<DragItemController>();
@@ -422,7 +577,24 @@ public class Testing : MonoBehaviour
 		//tail
 		ControlPoint_4_position = tailControlPointList[0].transform.position;
 		ControlPoint_5_position = tailControlPointList[1].transform.position;
+		
+		if (isRoofTriShanding)
+		{
+			if (chooseObj == basedRoofIcon.roofTriShandingIcon.topPoint)
+			{
+				basedRoofIcon.roofTriShandingIcon.AdjPos(tmp, chooseObj);
+				basedRoofIcon.roofTriShandingIcon.AdjMesh();
+			}
+			if (chooseObj == basedRoofIcon.rightRoofLine.bodyControlPointList[0])
+			{
+				if (basedRoofIcon.roofTriShandingIcon.downLength < basedRoofIcon.roofTriShandingIcon.initDownLength * 0.2f)
+				{
+					DragItemController.Instance.IConMenu2DeleteChooseIcon();
+				}
 
+			}
+		
+		}
 		//transform.CenterOnChildred();
 	}
 
@@ -430,7 +602,10 @@ public class Testing : MonoBehaviour
 	{
 		movement.freelist.AddRange(bodyControlPointList);
 		movement.freelist.AddRange(tailControlPointList);
-
+		if(isRoofTriShanding)
+		{
+			movement.verlist.Add(basedRoofIcon.roofTriShandingIcon.topPoint);
+		}
 	}
 	public Vector3 ClampPos(Vector3 inputPos)
 	{
@@ -445,5 +620,34 @@ public class Testing : MonoBehaviour
 		}
 
 		return inputPos;
+	}
+	public void DestroyFunction(string objName)
+	{
+		switch (objName)
+		{
+			case "RoofTriShandingIcon":
+				isRoofTriShanding = false;
+				basedRoofIcon.roofTriShandingIcon = null;
+				break;
+		}
+
+	}
+	public void UpdateFunction(string objName, GameObject correspondingDragItemObject)
+	{
+		switch (objName)
+		{
+			case "RoofTriShandingIcon":
+				if (basedRoofIcon.roofTriShandingIcon == null)
+				{
+					if (basedRoofIcon.topWidth >= basedRoofIcon.initCenterWidth*0.1f)
+					{
+						isRoofTriShanding = true;
+						basedRoofIcon.CreateRoofTriShanding(this, "RoofTriShandingIcon", correspondingDragItemObject);
+					}
+
+				}
+	
+			break;
+		}
 	}
 }

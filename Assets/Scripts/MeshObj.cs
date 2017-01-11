@@ -6,29 +6,58 @@ public static class GO_Extensions
 	public static void CenterOnChildred(this Transform aParent)
 	{
 		var childs = aParent.GetComponentsInChildren<Transform>(true) as Transform[];
-		List<Transform> childList=new List<Transform>();
+		List<Transform> childList = new List<Transform>();
 		var pos = Vector3.zero;
-		for(int i=0;i<childs.Length;i++)
+		for (int i = 0; i < childs.Length; i++)
 		{
-			if(childs[i].tag!="Empty")
+			if (childs[i].tag=="ControlPoint")
 			{
 				childList.Add(childs[i]);
 			}
 		}
 		foreach (var C in childList)
 		{
-			pos += C.position;
 			C.parent = null;
+			pos += C.position;
+	
 		}
 		pos /= childs.Length;
 		aParent.position = pos;
-		foreach (var C in childList) 
+
+		foreach (var C in childList)
 		{
 			C.parent = aParent;
 		}
-		Debug.Log("childs.Length" + childs.Length);
-		Debug.Log("aParent.position" + aParent.position);
 	}
+
+	public static Bounds GetMaxBounds(this Transform  g)
+	{
+		var b = new Bounds(g.transform.position, Vector3.zero);
+		foreach (Renderer r in g.GetComponentsInChildren<Renderer>())
+		{
+			b.Encapsulate(r.bounds);
+		}
+		return b;
+	}
+	public static Bounds OrthographicBounds(this Camera camera)
+	{
+		if (!camera.orthographic)
+		{
+			Debug.Log(string.Format("The camera {0} is not Orthographic!", camera.name), camera);
+			return new Bounds();
+		}
+
+		var t = camera.transform;
+		var x = t.position.x;
+		var y = t.position.y;
+		var size = camera.orthographicSize * 2;
+		var width = size * (float)Screen.width / Screen.height;
+		var height = size;
+
+		return new Bounds(new Vector3(x, y, 0), new Vector3(width, height, 0));
+	}
+
+
 }
 public class lineRendererControl
 {
@@ -45,6 +74,7 @@ public class lineRendererControl
 	{
 		GameObject lineObj = new GameObject("Line", typeof(LineRenderer));
 		lineObj.transform.parent = thisGameObject.transform;
+		lineObj.transform.localPosition=Vector3.zero;
 		LineRenderer lineRenderer = lineObj.GetComponent<LineRenderer>();
 		lineRenderer.sortingOrder = 1;
 		lineRenderer.SetWidth(lineWidth, lineWidth);
@@ -66,6 +96,7 @@ public class lineRendererControl
 	{
 		GameObject lineObj = new GameObject("Line", typeof(LineRenderer));
 		lineObj.transform.parent = thisGameObject.transform;
+		lineObj.transform.localPosition=Vector3.zero;
 		LineRenderer lineRenderer = lineObj.GetComponent<LineRenderer>();
 		lineRenderer.sortingOrder = 1;
 		lineRenderer.SetWidth(lineWidth, lineWidth);
@@ -110,7 +141,7 @@ public class lineRendererControl
 	public virtual void InitLineRender<T>(T thisGameObject) where T : Component { }
 
 }
-public class BodyStruct 
+public class BodyStruct
 {
 	public GameObject body = null;
 	public MeshFilter mFilter = null;
@@ -120,15 +151,15 @@ public class BodyStruct
 public class IconObject : lineRendererControl
 {
 	public enum PointIndex { LeftUpPoint = 0, RightUpPoint = 1, RightDownPoint = 2, LeftDownPoint = 3, };
-	public enum ObjectType { CanMove = 0, CanClick = 1, Normal = 2};
+	public enum ObjectType { CanMove = 0, CanClick = 1, Normal = 2 };
 	public enum BodyType { GeneralBody = 0, CylinderBody = 1, }
 	public List<GameObject> controlPointList = new List<GameObject>();
 	public Vector3[] lastControlPointPosition = null;
 	public List<Vector3> controlPointList_Vec3_2_LineRender = new List<Vector3>();//用於lineRenderer的controlPoint
-	public BodyStruct bodyStruct=null;
+	public BodyStruct bodyStruct = null;
 	public Material silhouetteShader = null;
 
-	public IconControl iconMenuControl=null;
+	public IconControl iconMenuControl = null;
 	public float centerX;
 	public float centerY;
 	public float closerDis = 0.01f;
@@ -136,7 +167,26 @@ public class IconObject : lineRendererControl
 	{
 		if (Shader.Find("Outlined/Silhouetted Bumped Diffuse"))
 			silhouetteShader = new Material(Shader.Find("Outlined/Silhouetted Bumped Diffuse"));
+	}
+	public List<GameObject> ControlPointSetRingPos<T>(T thisGameObject, int edgeCount, float radius, int rotateAngle, List<GameObject> controlPointList) where T : Component
+	{
+		Vector2 center = thisGameObject.transform.position;
+		float piDouble = Mathf.PI * 2;
 
+		int count = 0;
+		for (float i = 0; i < piDouble; i += (piDouble / edgeCount))
+		{
+			float ansX = (radius * Mathf.Cos(-i)) ; //求X座標
+			float ansY = (radius * Mathf.Sin(-i)) ; //求Y座標
+
+			ansX = (Mathf.Cos(-rotateAngle) * ansX - Mathf.Sin(-rotateAngle) * ansY) + center.x;
+			ansY = (Mathf.Sin(-rotateAngle) * ansX + Mathf.Cos(-rotateAngle) * ansY) + center.y;
+			controlPointList[count].transform.position = new Vector3(ansX, ansY, controlPointList[count].transform.position.z);
+			count++;
+			if (count >= edgeCount) break;
+		}
+
+		return controlPointList;
 	}
 	public void SetObjectCanMove(GameObject obj, ObjectType objectType)
 	{
@@ -144,14 +194,14 @@ public class IconObject : lineRendererControl
 		{
 			case ObjectType.CanMove:
 				obj.tag = "ControlPoint";
-			break;
+				break;
 			case ObjectType.CanClick:
 				obj.tag = "MeshBodyCollider";
-			 break;
+				break;
 			case ObjectType.Normal:
 			default:
-				 obj.tag = "Untagged";
-			 break;
+				obj.tag = "Untagged";
+				break;
 		}
 	}
 	public virtual void InitIconMenuButtonUpdate() { }
@@ -171,7 +221,7 @@ public class IconObject : lineRendererControl
 				newBodyStruct.mCollider = newBodyStruct.body.AddComponent<MeshCollider>() as MeshCollider;
 				newBodyStruct.mFilter.mesh = new Mesh();
 				newBodyStruct.mCollider.GetComponent<MeshCollider>().sharedMesh = newBodyStruct.mFilter.mesh;
-				newBodyStruct.mRenderer.sortingOrder =(bodyStruct!=null)?++bodyStruct.mRenderer.sortingOrder+1:0;
+				newBodyStruct.mRenderer.sortingOrder = (bodyStruct != null) ? ++bodyStruct.mRenderer.sortingOrder + 1 : 0;
 				Debug.Log("newBodyStruct.mRenderer.sortingOrder " + newBodyStruct.mRenderer.sortingOrder);
 				newBodyStruct.body.tag = "MeshBodyCollider";
 				break;
@@ -305,17 +355,19 @@ public class IconObject : lineRendererControl
 	public GameObject CreateControlPoint(string objName, Vector3 localScale, Vector3 pos)
 	{
 		GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		SetObjectCanMove(obj,ObjectType.CanMove);
+		SetObjectCanMove(obj, ObjectType.CanMove);
 		obj.name = objName;
 		obj.transform.localScale = localScale;
 		obj.transform.position = pos;
 		return obj;
 	}
-	public void SetParent2BodyAndControlPointList<T>(T thisGameObject,params GameObject[] values)
+	public void SetParent2BodyAndControlPointList<T>(T thisGameObject, params GameObject[] values)
 	where T : Component
 	{
-		if (bodyStruct.body != null) bodyStruct.body.transform.parent = thisGameObject.transform;
-		for(int i=0;i<values.Length;i++)
+		if (bodyStruct.body != null) {
+			bodyStruct.body.transform.parent = thisGameObject.transform;
+		}
+		for (int i = 0; i < values.Length; i++)
 		{
 			values[i].transform.parent = thisGameObject.transform;
 		}
@@ -656,7 +708,7 @@ public class ShandingIcon : IconObject//歇山頂
 		shandingIconWidth = controlPointList[(int)PointIndex.RightUpPoint].transform.position.x - controlPointList[(int)PointIndex.LeftUpPoint].transform.position.x;
 		shandingIconHeight = controlPointList[(int)PointIndex.RightUpPoint].transform.position.y - controlPointList[(int)PointIndex.RightDownPoint].transform.position.y;
 
-		mainRidgeWidth  = controlPointList[(int)PointIndex.RightMainRidgePoint].transform.position.x - controlPointList[(int)PointIndex.LeftMainRidgePoint].transform.position.x;
+		mainRidgeWidth = controlPointList[(int)PointIndex.RightMainRidgePoint].transform.position.x - controlPointList[(int)PointIndex.LeftMainRidgePoint].transform.position.x;
 
 		shandingIconCenterWidth = (controlPointList[(int)PointIndex.RightUpCenterPoint].transform.position.x - controlPointList[(int)PointIndex.LeftUpCenterPoint].transform.position.x);
 		shandingIconCenterHeight = (controlPointList[(int)PointIndex.RightUpCenterPoint].transform.position.y - controlPointList[(int)PointIndex.RightDownCenterPoint].transform.position.y);
@@ -742,6 +794,7 @@ public class PentagonIcon : IconObject//五邊形
 		InitBodySetting(objName, (int)BodyType.GeneralBody);
 		InitIconMenuButtonSetting();
 
+		//controlPointList = ControlPointSetRingPos(thisGameObject, 5, 0.2f,2, controlPointList);
 		this.controlPointList = controlPointList;
 		InitControlPointList2lastControlPointPosition();
 
@@ -769,7 +822,9 @@ public class HexagonIcon : IconObject//六邊形
 		InitBodySetting(objName, (int)BodyType.GeneralBody);
 		InitIconMenuButtonSetting();
 
+		controlPointList = ControlPointSetRingPos(thisGameObject, 6, 0.15f, 0, controlPointList);
 		this.controlPointList = controlPointList;
+
 		InitControlPointList2lastControlPointPosition();
 
 		bodyStruct.mFilter.mesh.vertices = new Vector3[] {
@@ -794,12 +849,14 @@ public class OctagonIcon : IconObject//八邊形
 	public int edgeIndex = 8;
 	public void OctagonIconCreate<T>(T thisGameObject, string objName, List<GameObject> controlPointList) where T : Component
 	{
-		Debug.Log("zzz");
+
 		InitBodySetting(objName, (int)BodyType.GeneralBody);
 		InitIconMenuButtonSetting();
-		Debug.Log("gfdfdfgfg:controlPointList+:" + controlPointList.Count);
+
+		controlPointList = ControlPointSetRingPos(thisGameObject, 8, 0.15f, 0, controlPointList);
+
 		this.controlPointList = controlPointList;
-		Debug.Log("gfrgfg:controlPointList+:" + controlPointList.Count);
+
 		InitControlPointList2lastControlPointPosition();
 
 		bodyStruct.mFilter.mesh.vertices = new Vector3[] {
@@ -850,23 +907,6 @@ public class MeshObj : MonoBehaviour
 	void Start()
 	{
 		dragitemcontroller = GameObject.Find("DragItemController").GetComponent<DragItemController>();
-	}
-	List<GameObject> ControlPointCreate(int edgeCount, List<GameObject> controlPointList) 
-	{ 
-		Vector2 center=transform.position;
-		float r = 0.1f; //中心點與頂點距離
-		float piDouble = Mathf.PI * 2;
-		int count=0;
-		for (float i = 0; i < piDouble; i += (piDouble / edgeCount))
-		{
-			float ansX = (r * Mathf.Cos(-i) + center.x); //求X座標
-			float ansY = (r * Mathf.Sin(-i) + center.y); //求Y座標
-			controlPointList[count].transform.position = new Vector3(ansX, ansY, controlPointList[count].transform.position.z);
-			count++;
-			if(count>=edgeCount)break;
-		}
-
-		return controlPointList;
 	}
 	VerandaIcon CreateVerandaIcon()
 	{
@@ -929,7 +969,7 @@ public class MeshObj : MonoBehaviour
 	HexagonIcon CreateHexagonIcon()
 	{
 		HexagonIcon hexIcon = new HexagonIcon();
-		controlPointList = ControlPointCreate(6, controlPointList);
+
 		hexIcon.HexagonIconCreate(this, "HexagonIcon", controlPointList);
 
 		edgeIndex = hexIcon.edgeIndex;
@@ -938,13 +978,13 @@ public class MeshObj : MonoBehaviour
 	OctagonIcon CreateOctagonIcon()
 	{
 		OctagonIcon octIcon = new OctagonIcon();
-		controlPointList = ControlPointCreate(8, controlPointList);
+
 		octIcon.OctagonIconCreate(this, "OctagonIcon", controlPointList);
 
 		edgeIndex = octIcon.edgeIndex;
 		return octIcon;
 	}
-	
+
 	void Awake()
 	{
 		movement = GameObject.Find("Movement").GetComponent<Movement>();
@@ -1020,7 +1060,7 @@ public class MeshObj : MonoBehaviour
 						octagonIcon.AdjPos(tmp, i, center);
 						octagonIcon.AdjMesh();
 						break;
-						
+
 				}
 				break;
 
@@ -1095,7 +1135,7 @@ public class MeshObj : MonoBehaviour
 				return hexagonIcon.ClampPos(inputPos, center);
 			case "OctagonIcon":
 				return octagonIcon.ClampPos(inputPos, center);
-			break;
+				break;
 		}
 		return inputPos;
 	}

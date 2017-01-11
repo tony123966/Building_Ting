@@ -2884,7 +2884,7 @@ public class body2icon : MonoBehaviour
 		ini_bodydis.x = bodydis.x = (controlPointList[1].transform.position.x - controlPointList[0].transform.position.x) / 2.0f;
 		ini_wallWidth = wallWidth = ini_bodydis.x * 0.8f;
 
-		ini_columnPlatformBorderWidth = columnPlatformBorderWidth = ini_bodydis.x * 0.8f;
+		ini_columnPlatformBorderWidth = columnPlatformBorderWidth = bodydis.x * 0.5f;
 		ini_columnPlatformWidth = columnPlatformWidth = columnPlatformBorderWidth + bodydis.x;
 		columnIcon = new ColumnIcon();
 
@@ -3151,8 +3151,8 @@ public class body2icon : MonoBehaviour
 				if (columnIcon.wallIcon == null)
 				{
 					isWall = true;
-					ini_wallWidth = wallWidth = columnIcon.columnWidth / 2.0f * 0.9f;
-					windowHeight = ini_windowHeight = 0.9f * bodydis.y;
+					ini_wallWidth = wallWidth = columnIcon.columnWidth / 2.0f * 0.8f;
+					windowHeight = ini_windowHeight = 0.5f * bodydis.y;
 					columnIcon.CreateWall(this, "WallIcon", ini_wallWidth, ini_windowHeight, correspondingDragItemObject);
 
 					/*	movement.horlist.Add(columnIcon.wallIcon.rightDownPoint);

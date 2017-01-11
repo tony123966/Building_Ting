@@ -1150,7 +1150,7 @@ public class IconMenuController
 					contextMenuItems.Add(new ContextMenuItem("Quantity Adjustment", sampleButton, scrollBar));
 				contextMenuItems.Add(new ContextMenuItem("Exit", sampleButton, exit));
 				contextPanel = IconMenu.Instance.CreateIconMenu(contextMenuItems, new Vector2(pos.x, pos.y));
-				Debug.Log("contextPanel" + contextPanel.name);
+			/*	Debug.Log("contextPanel" + contextPanel.name);*/
 			}
 		}
 		else
@@ -1424,10 +1424,9 @@ public class DragItemController : MonoBehaviour
 			if (Input.GetMouseButtonUp(0))//放開選到的控制點
 			{
 				chooseObj.GetComponent<Collider>().enabled = true;
-
+				//chooseObj.transform.parent.transform.GetMaxBounds();
 				if (chooseObj.transform.parent.GetComponent<MeshObj>())
 				{
-
 
 					building.UpdateRoof();
 					building.multi_roof();
@@ -1461,7 +1460,7 @@ public class DragItemController : MonoBehaviour
 					// normalize
 					hitLocalUV.x = (localHit.x - bounds.min.x) / (bounds.size.x);
 					hitLocalUV.y = (localHit.y - bounds.min.y) / (bounds.size.y);
-					float border = 0.2f;
+					float border = 0.0f;
 
 					if (hitLocalUV.x >= border && hitLocalUV.x <= (1 - border) && hitLocalUV.y >= border && hitLocalUV.y <= (1 - border))
 					{
@@ -1806,8 +1805,6 @@ public class DragItemController : MonoBehaviour
 		}
 	}
 
-
-
 	public void IConMenu2DeleteChooseIcon()
 	{
 		int index = mainSingleWindowinUseIndex;
@@ -1836,9 +1833,13 @@ public class DragItemController : MonoBehaviour
 								lastChooseIconObject.transform.parent.GetComponent<body2icon>().DestroyFunction(kvp.Key);
 							}
 
-							if (lastChooseIconObject.transform.parent.GetComponent<platform2icon>())
+							else if (lastChooseIconObject.transform.parent.GetComponent<platform2icon>())
 							{
 								lastChooseIconObject.transform.parent.GetComponent<platform2icon>().DestroyFunction(kvp.Key);
+							}
+							else if (lastChooseIconObject.transform.parent.GetComponent<Testing>())
+							{
+								lastChooseIconObject.transform.parent.GetComponent<Testing>().DestroyFunction(kvp.Key);
 							}
 
 							if (kvp.Key == "Frieze")
@@ -2216,6 +2217,10 @@ public class DragItemController : MonoBehaviour
 						}
 
 					}
+					else if (AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex][MAINCOMPONENT][0].GetComponent<Testing>())
+					{
+						AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex][MAINCOMPONENT][0].GetComponent<Testing>().UpdateFunction(setDragObject.name, correspondingDragItemObject);
+					}
 
 				}
 				break;
@@ -2253,7 +2258,8 @@ public class DragItemController : MonoBehaviour
 		allComponentList.Add(clone);
 		AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex].Add(MAINCOMPONENT, allComponentList);
 
-		//cameraList[index].GetComponent<CameraFollow>().target=clone.transform;
+		//cameraList[index].GetComponent<CameraFollow>().target=clone;
+		cameraList[index].GetComponent<CameraFollow>().SetTarget(clone.transform);
 	}
 	void CreateMainComponent(int index)
 	{
@@ -2269,7 +2275,8 @@ public class DragItemController : MonoBehaviour
 		allComponentList.Add(clone);
 		AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex].Add(MAINCOMPONENT, allComponentList);
 
-		//chooseCamera.GetComponent<CameraFollow>().target = clone.transform;
+		//chooseCamera.GetComponent<CameraFollow>().target = clone;
+		chooseCamera.GetComponent<CameraFollow>().SetTarget(clone.transform);
 	}
 	GameObject CreateDecorateComponent(int index)
 	{
@@ -2349,7 +2356,7 @@ public class DragItemController : MonoBehaviour
 						//clone.transform.parent = this.transform;
 						clone.transform.parent = AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex][MAINCOMPONENT][0].transform;
 						clone.transform.localPosition = Vector3.zero;
-						clone.tag = "Empty";
+				/*		clone.tag = "Empty";*/
 
 						if (!clone.GetComponent<DecorateEmptyObjectList>()) clone.AddComponent<DecorateEmptyObjectList>();
 						AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex][chooseDragObject.name].Add(clone);
@@ -2367,7 +2374,7 @@ public class DragItemController : MonoBehaviour
 					}
 					clone.transform.parent = AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex][MAINCOMPONENT][0].transform;
 					clone.transform.localPosition = Vector3.zero;
-					clone.tag = "Empty";
+				/*	clone.tag = "Empty";*/
 
 					if (!clone.GetComponent<DecorateEmptyObjectList>()) clone.AddComponent<DecorateEmptyObjectList>();
 					List<GameObject> newList = new List<GameObject>();
