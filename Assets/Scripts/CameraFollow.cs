@@ -32,6 +32,7 @@ public class CameraFollow : MonoBehaviour {
 
 	[SerializeField]
 	float zoomScale = 50f;
+
 	Camera camera;
 	public void SetTarget(Transform target) 
 	{
@@ -49,7 +50,10 @@ public class CameraFollow : MonoBehaviour {
 		if (target!=null)
 		{
 			SetTarget(target.transform);
+
 			Rect boundingBox = CalculateTargetsBoundingBox();
+			Debug.Log("boundingBox" + boundingBox);
+			Debug.Log("camera.OrthographicBounds()" + camera.OrthographicBounds());
 			transform.position = CalculateCameraPosition(boundingBox);
 			camera.orthographicSize = CalculateOrthographicSize(boundingBox);
 		}
@@ -76,7 +80,6 @@ public class CameraFollow : MonoBehaviour {
 			maxX = Mathf.Max(maxX, position.x);
 			maxY = Mathf.Max(maxY, position.y);
 		}
-
 		return Rect.MinMaxRect(minX - boundingBoxPadding, maxY + boundingBoxPadding, maxX + boundingBoxPadding, minY - boundingBoxPadding);
 	}
 
@@ -103,10 +106,11 @@ public class CameraFollow : MonoBehaviour {
 		Vector3 topRight = new Vector3(boundingBox.x + boundingBox.width, boundingBox.y, 0f);
 		Vector3 topRightAsViewport = camera.WorldToViewportPoint(topRight);
 
+
 		if (topRightAsViewport.x >= topRightAsViewport.y)
-			orthographicSize = (Mathf.Abs(boundingBox.width) / camera.aspect / 2f)/zoomScale;
+			orthographicSize = (Mathf.Abs(boundingBox.width) / camera.aspect / 2f) / zoomScale;
 		else
-			orthographicSize = (Mathf.Abs(boundingBox.height) / 2f) / zoomScale;
+			orthographicSize = (Mathf.Abs(boundingBox.height)  / 2f) / zoomScale;
 
 		return Mathf.Clamp(Mathf.Lerp(camera.orthographicSize, orthographicSize, Time.deltaTime * zoomSpeed), minimumOrthographicSize, Mathf.Infinity);
 	}

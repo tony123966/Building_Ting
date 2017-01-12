@@ -1334,7 +1334,6 @@ public class DragItemController : MonoBehaviour
 			CreateMainComponent((int)WindowsIndex.Formfactor, formFractorInitDragIconObj);
 			AllWindowsStruct[(int)WindowsIndex.Formfactor].lastChooseMainDragObjectName = formFractorInitDragIconObj.name;
 			ThisWindowsComponent = AllWindowsStruct[(int)WindowsIndex.Formfactor];
-
 		}
 		if (roofInitDragIconObj && !AllWindowsStruct[(int)WindowsIndex.Roof].allFloorItem[AllWindowsStruct[(int)WindowsIndex.Roof].inUseTab2ComponentLayerIndex].ContainsKey(MAINCOMPONENT))
 		{
@@ -1420,11 +1419,11 @@ public class DragItemController : MonoBehaviour
 
 		if (chooseObj)//已選到控制點
 		{
+
 			iconMenuController.Exit();
 			if (Input.GetMouseButtonUp(0))//放開選到的控制點
 			{
 				chooseObj.GetComponent<Collider>().enabled = true;
-				//chooseObj.transform.parent.transform.GetMaxBounds();
 				if (chooseObj.transform.parent.GetComponent<MeshObj>())
 				{
 
@@ -1456,7 +1455,6 @@ public class DragItemController : MonoBehaviour
 				{
 					Vector2 hitLocalUV;
 					Vector3 localHit = mousePos2World;
-
 					// normalize
 					hitLocalUV.x = (localHit.x - bounds.min.x) / (bounds.size.x);
 					hitLocalUV.y = (localHit.y - bounds.min.y) / (bounds.size.y);
@@ -1702,6 +1700,8 @@ public class DragItemController : MonoBehaviour
 			}
 			else if (Input.GetMouseButtonDown(1))//右鍵找控制點開啟IconMenu
 			{
+
+
 				Bounds bounds;
 				int inUseTab = 0;
 				int index = -1;
@@ -2259,7 +2259,10 @@ public class DragItemController : MonoBehaviour
 		AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex].Add(MAINCOMPONENT, allComponentList);
 
 		//cameraList[index].GetComponent<CameraFollow>().target=clone;
-		cameraList[index].GetComponent<CameraFollow>().SetTarget(clone.transform);
+		if (cameraList[index].GetComponent<CameraFollow>())
+		{
+			cameraList[index].GetComponent<CameraFollow>().SetTarget(clone.transform);
+		}
 	}
 	void CreateMainComponent(int index)
 	{
@@ -2276,7 +2279,11 @@ public class DragItemController : MonoBehaviour
 		AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex].Add(MAINCOMPONENT, allComponentList);
 
 		//chooseCamera.GetComponent<CameraFollow>().target = clone;
-		chooseCamera.GetComponent<CameraFollow>().SetTarget(clone.transform);
+		if(chooseCamera.GetComponent<CameraFollow>())
+		{ 
+			chooseCamera.GetComponent<CameraFollow>().SetTarget(clone.transform);
+		}
+
 	}
 	GameObject CreateDecorateComponent(int index)
 	{
