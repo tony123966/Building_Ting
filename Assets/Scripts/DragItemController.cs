@@ -2024,6 +2024,10 @@ public class DragItemController : MonoBehaviour
 
 		AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex] = AllWindowsStruct[index].temporateAllFloorItem[AllWindowsStruct[index].lastChooseMainDragObjectName][AllWindowsStruct[index].inUseTab2ComponentLayerIndex];
 		AllWindowsStruct[index].ShowAllComponent();
+		if (cameraList[index].GetComponent<CameraFollow>())
+		{
+			cameraList[index].GetComponent<CameraFollow>().SetTarget(AllWindowsStruct[index].allFloorItem[AllWindowsStruct[index].inUseTab2ComponentLayerIndex][MAINCOMPONENT][0].transform);
+		}
 
 	}
 	//按下刪除鈕後，清除選用視窗最後的missionTab對應的commponent內容
